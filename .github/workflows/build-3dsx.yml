@@ -1,6 +1,8 @@
 name: Build 3DSX only
 
 on:
+  push:
+    branches: [bw2-build]
   workflow_dispatch:
 
 jobs:
