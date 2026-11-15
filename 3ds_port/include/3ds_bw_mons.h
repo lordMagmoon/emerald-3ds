@@ -86,6 +86,12 @@ void CtrBwMons_Loaded(unsigned char battler, unsigned short species, unsigned ch
  * in slot `slot`. Ends every battler of the battle before it. */
 void CtrBwMons_Scene(unsigned char slot, unsigned short species, unsigned int personality,
                      unsigned int otId, unsigned char spriteId, unsigned char position);
+/* A Pokemon's picture sprite outside battle (the caught Pokemon's Pokedex
+ * page, the egg hatching): drawn from its BW picture in `slot` while sprite
+ * `spriteId` is the one it was made as. Leaves the battlers alone; ends with
+ * CtrBwMons_Clear(slot). */
+void CtrBwMons_Picture(unsigned char slot, unsigned short species, unsigned int personality, bool shiny,
+                       unsigned char spriteId);
 /* The battler shows something else (the Substitute doll). */
 void CtrBwMons_Clear(unsigned char battler);
 /* An opponent fainting: `rows` of eight still shown. */

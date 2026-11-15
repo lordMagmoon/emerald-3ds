@@ -382,6 +382,9 @@ static bool8 FuncIsActiveTask(TaskFunc func) { return FindTaskIdByFunc(func) != 
 #define GetBgTilemapBuffer(...) NULL
 #define Free(buffer) free(buffer)
 #define NationalPokedexNumToSpecies(dexNum) (dexNum)
+#define IsShinyOtIdPersonality(otId, personality) ((void)(otId), (void)(personality), 0)
+#define CtrBwMons_Picture(slot, species, personality, shiny, spriteId) \
+    ((void)(slot), (void)(species), (void)(personality), (void)(shiny), (void)(spriteId))
 #define GetMonSpritePalFromSpeciesAndPersonality(species, otId, personality) \
     ((void)(species), (void)(otId), (void)(personality), monPalette)
 #define OBJ_PLTT_ID(paletteNum) (paletteNum)

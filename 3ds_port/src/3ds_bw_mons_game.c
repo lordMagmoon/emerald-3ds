@@ -36,7 +36,7 @@ static uint32_t sVersion;
  * template, in place of a battler's. */
 static bool sScene[CTR_BW_BATTLERS];
 static u8 sSceneSprite[CTR_BW_BATTLERS];
-static u8 sScenePosition[CTR_BW_BATTLERS];
+static const struct SpriteFrameImage *sSceneImages[CTR_BW_BATTLERS];
 
 /* The form's part of a file name. */
 static const char *FormSuffix(u16 species, u8 form)
@@ -141,18 +141,15 @@ void CtrBwMons_Loaded(unsigned char battler, unsigned short species, unsigned ch
     CtrBwPic_Request(battler, b->path);
 }
 
-void CtrBwMons_Scene(unsigned char slot, unsigned short species, unsigned int personality,
-                     unsigned int otId, unsigned char spriteId, unsigned char position)
+/* A Pokemon shown out of battle (CtrBwMons_Scene, CtrBwMons_Picture): drawn
+ * in `slot` while sprite `spriteId` is the one it was made as (its images). */
+static void SceneSetup(unsigned char slot, unsigned short species, unsigned int personality, bool shiny,
+                       unsigned char spriteId, const u8 *pic)
 {
-    CtrBwBattler *b;
+    CtrBwBattler *b = &sBattlers[slot];
     unsigned dex;
     const char *form = "";
 
-    if (slot >= CTR_BW_BATTLERS || position >= MAX_BATTLERS_COUNT) return;
-    /* The battle's own are over: their sprites are gone with it. */
-    for (unsigned i = 0; i < CTR_BW_BATTLERS; ++i)
-        if (!sScene[i]) CtrBwMons_Clear((unsigned char)i);
-    b = &sBattlers[slot];
     b->active = false;
     b->clipRows = 64;
     b->copyBg = 0;
@@ -161,16 +158,15 @@ void CtrBwMons_Scene(unsigned char slot, unsigned short species, unsigned int pe
     b->version = ++sVersion;
     sScene[slot] = true;
     sSceneSprite[slot] = spriteId;
-    sScenePosition[slot] = position;
+    sSceneImages[slot] = spriteId < MAX_SPRITES ? gSprites[spriteId].images : NULL;
     dex = species && species < NUM_SPECIES ? SpeciesToNationalPokedexNum(species) : 0;
-    if (!dex || dex > 386) return;
+    if (!dex || dex > 386 || sSceneImages[slot] == NULL) return;
     if (species == SPECIES_UNOWN) form = FormSuffix(species, GetUnownLetterByPersonality(personality));
     if (!Find(b->path, sizeof(b->path), "front", dex, form,
-              GetGenderFromSpeciesAndPersonality(species, personality) == MON_FEMALE,
-              IsShinyOtIdPersonality(otId, personality)))
+              GetGenderFromSpeciesAndPersonality(species, personality) == MON_FEMALE, shiny))
         return;
-    if (gMonSpritesGfxPtr)
-        MeasurePicture(gMonSpritesGfxPtr->sprites.byte[position], &b->feetY, &b->centreX2, &b->topY);
+    if (pic)
+        MeasurePicture(pic, &b->feetY, &b->centreX2, &b->topY);
     else
     {
         b->feetY = 56;
@@ -180,6 +176,28 @@ void CtrBwMons_Scene(unsigned char slot, unsigned short species, unsigned int pe
     b->back = false;
     b->active = true;
     CtrBwPic_Request(slot, b->path);
+}
+
+void CtrBwMons_Scene(unsigned char slot, unsigned short species, unsigned int personality,
+                     unsigned int otId, unsigned char spriteId, unsigned char position)
+{
+    if (slot >= CTR_BW_BATTLERS || position >= MAX_BATTLERS_COUNT) return;
+    /* The battle's own are over: their sprites are gone with it. */
+    for (unsigned i = 0; i < CTR_BW_BATTLERS; ++i)
+        if (!sScene[i]) CtrBwMons_Clear((unsigned char)i);
+    SceneSetup(slot, species, personality, IsShinyOtIdPersonality(otId, personality), spriteId,
+               gMonSpritesGfxPtr ? gMonSpritesGfxPtr->sprites.byte[position] : NULL);
+}
+
+void CtrBwMons_Picture(unsigned char slot, unsigned short species, unsigned int personality, bool shiny,
+                       unsigned char spriteId)
+{
+    const struct Sprite *sprite;
+
+    if (slot >= CTR_BW_BATTLERS || spriteId >= MAX_SPRITES) return;
+    sprite = &gSprites[spriteId];
+    SceneSetup(slot, species, personality, shiny, spriteId,
+               sprite->images && sprite->images[0].data ? sprite->images[0].data : NULL);
 }
 
 /* Whether the sprite is still the one made from the battler template of
@@ -251,7 +269,7 @@ const CtrBwBattler *CtrBwMons_Battlers(void)
         {
             if (!b->active || sSceneSprite[i] >= MAX_SPRITES) continue;
             sprite = &gSprites[sSceneSprite[i]];
-            if (!FromTemplate(sprite, sScenePosition[i])) continue;
+            if (!sprite->inUse || sprite->images != sSceneImages[i]) continue;
             b->tile = sprite->oam.tileNum;
             b->spriteHidden = sprite->invisible;
             continue;

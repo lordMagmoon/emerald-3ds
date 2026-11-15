@@ -1,0 +1,81 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the caught Pokemon's Pokedex page and the egg hatching drawn from Black 2 / White 2 pictures
+Applies after 0097-ruby-sapphire-wild.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/egg_hatch.c b/src/egg_hatch.c
+index 49cf5c7..3eed0e3 100644
+--- a/src/egg_hatch.c
++++ b/src/egg_hatch.c
+@@ -37,6 +37,9 @@
+ #include "data.h"
+ #include "battle.h" // to get rid of later
+ #include "constants/rgb.h"
++#ifdef PLATFORM_3DS
++#include "3ds_bw_mons.h"
++#endif
+ 
+ #define GFXTAG_EGG       12345
+ #define GFXTAG_EGG_SHARD 23456
+@@ -457,6 +460,11 @@ static u8 EggHatchCreateMonSprite(u8 useAlt, u8 state, u8 partyId, u16 *speciesL
+         spriteId = CreateSprite(&gMultiuseSpriteTemplate, EGG_X, EGG_Y, 6);
+         gSprites[spriteId].invisible = TRUE;
+         gSprites[spriteId].callback = SpriteCallbackDummy;
++#ifdef PLATFORM_3DS
++        // The hatched Pokemon's BW picture, once the egg breaks.
++        CtrBwMons_Picture(3, GetMonData(mon, MON_DATA_SPECIES), GetMonData(mon, MON_DATA_PERSONALITY),
++                          IsMonShiny(mon), spriteId);
++#endif
+         break;
+     }
+     return spriteId;
+@@ -585,6 +593,9 @@ static void EggHatchSetMonNickname(void)
+ {
+     SetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar3);
+     FreeMonSpritesGfx();
++#ifdef PLATFORM_3DS
++    CtrBwMons_Clear(3);
++#endif
+     Free(sEggHatchData);
+     SetMainCallback2(CB2_ReturnToField);
+ }
+@@ -715,6 +726,9 @@ static void CB2_EggHatch(void)
+         if (!gPaletteFade.active)
+         {
+             FreeMonSpritesGfx();
++#ifdef PLATFORM_3DS
++            CtrBwMons_Clear(3);
++#endif
+             RemoveWindow(sEggHatchData->windowId);
+             UnsetBgTilemapBuffer(0);
+             UnsetBgTilemapBuffer(1);
+diff --git a/src/pokedex.c b/src/pokedex.c
+index 2ed87a3..5021c4d 100644
+--- a/src/pokedex.c
++++ b/src/pokedex.c
+@@ -27,6 +27,9 @@
+ #include "trig.h"
+ #include "window.h"
+ #include "constants/rgb.h"
++#ifdef PLATFORM_3DS
++#include "3ds_bw_mons.h"
++#endif
+ #include "constants/songs.h"
+ #ifdef PORT_BRIDGE
+ #include "port_platform.h"
+@@ -4253,6 +4256,17 @@ static void Task_DisplayCaughtMonDexPage(u8 taskId)
+     case 4:
+         spriteId = CreateMonSpriteFromNationalDexNumber(dexNum, MON_PAGE_X, MON_PAGE_Y, 0);
+         gSprites[spriteId].oam.priority = 0;
++#ifdef PLATFORM_3DS
++        {
++            // The caught Pokemon's BW picture, its own gender and colours
++            // (the page's slides back as it, palette and all, for the nickname).
++            u32 otId = ((u16)gTasks[taskId].tOtIdHi << 16) | (u16)gTasks[taskId].tOtIdLo;
++            u32 personality = ((u16)gTasks[taskId].tPersonalityHi << 16) | (u16)gTasks[taskId].tPersonalityLo;
++
++            CtrBwMons_Picture(3, NationalPokedexNumToSpecies(dexNum), personality,
++                              IsShinyOtIdPersonality(otId, personality), spriteId);
++        }
++#endif
+         BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_BLACK);
+ #ifdef PLATFORM_3DS
+         CtrCentred_SetVBlankCallback(VBlankCB_CaughtMonPage);
