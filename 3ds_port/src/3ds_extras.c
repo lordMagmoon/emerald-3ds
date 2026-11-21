@@ -258,6 +258,9 @@ const CtrExtra gCtrExtras[] =
     /* Moves physical or special by their own category, as from Gen IV on
      * (pokemon.c, MoveSplitEnabled). */
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("PHYS/SPEC SPLIT", "FÍSICO / ESPECIAL", "PHYS./SPÉC.", "FIS./SPEC.", "FÍS./ESP.", "PHYS./SPEZ.", "ぶつり/とくしゅ"), "move_split", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    /* The event islands' tickets earned in the game, from the MYSTERY GIFT
+     * man upstairs in a POKéMON CENTER (src/event_tickets.c, patch 0095). */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("EVENT TICKETS", "TICKETS EVENTO", "TICKETS ÉVÉN.", "BIGLIETTI EVENTO", "BILHETES EVENTO", "EVENT-TICKETS", "イベント チケット"), "event_tickets", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_CHEATS, CTR_TEXT("WILD ENCOUNTERS", "ENC. SALVAJES", "RENCONTRES", "INCONTRI", "ENCONTROS SELV.", "WILDE BEGEGN.", "やせいの でかた"), "encounter_rate", 5, 0, sEncounterRate, NULL, NULL, NULL},
     {CTR_EXTRAS_CHEATS, CTR_TEXT("SHINY ODDS", "PROB. VARIOCOLOR", "CHROMATIQUES", "PROB. SHINY", "CHANCE SHINY", "SHINY-CHANCE", "いろちがい"), "shiny_odds", 6, 0, sShinyOdds, NULL, NULL, NULL},
     {CTR_EXTRAS_CHEATS, CTR_TEXT("ALWAYS CATCH", "CAPTURA SEGURA", "CAPTURE SÛRE", "CATTURA SICURA", "CAPTURA GARANTIDA", "IMMER FANGEN", "かならず つかまる"), "always_catch", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},

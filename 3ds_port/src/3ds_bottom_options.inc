@@ -123,6 +123,8 @@ static const OptRowDef sRowsDex[] = {
     EXTRA_ROW("dex_hoenn"),
     EXTRA_ROW("dex_national_on"),
     EXTRA_ROW("dex_national"),
+    /* The event islands' tickets earned in the game (patch 0095). */
+    EXTRA_ROW("event_tickets"),
 };
 static const OptRowDef sRowsItems[] = {
     EXTRA_ROW("give_pocket"),

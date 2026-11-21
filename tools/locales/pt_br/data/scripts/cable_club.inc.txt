@@ -1,0 +1,11 @@
+# O funcionário do PRESENTE MISTERIOSO entrega os bilhetes dos eventos
+# conquistados no jogo (patch 0095, src/event_tickets.c).
+
+[CableClub_Text_CtrTicketFromSteven] 5dd7929277
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pVocê deve ser {PLAYER}.\nO STEVEN deixou isto pra você.$
+
+[CableClub_Text_CtrTicketFromGymLeaders] 5691039abb
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pVocê deve ser {PLAYER}.\nOs LÍDERES DE GINÁSIO de HOENN\ldeixaram isto pra você.$
+
+[CableClub_Text_CtrTicketFromLeague] abe5d078c4
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pVocê deve ser {PLAYER}.\nA LIGA POKéMON deixou isto\lpra você.$
