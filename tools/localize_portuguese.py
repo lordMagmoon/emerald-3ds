@@ -487,6 +487,10 @@ def main() -> int:
         print("localize_portuguese: %d texts in %d files check out"
               % (sum(r.applied for r in results), len(results)))
         return 0
+    # Keep the English EASY CHAT words for the trendy phrase (the Feebas
+    # calculators ask for it in English) before staging the Portuguese ones.
+    import easy_chat_english
+    easy_chat_english.write(tree)
     # Validate everything before changing anything.
     for relative in present(tree):
         localize(tree, relative, charset, write=True)

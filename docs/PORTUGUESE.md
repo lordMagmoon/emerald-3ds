@@ -166,3 +166,12 @@ jogador: no builder do Windows, em *Game language* (aparece com a ROM
 inglesa); na linha de comando, `--language pt`; no site, o idioma é escolhido
 antes da ROM (o `web-manifest.json` lista a ROM inglesa duas vezes, a segunda
 com `"language": "pt"`, e `entrypoint.apiVersion` é 2).
+
+## The trendy phrase stays in English
+
+The Feebas calculators ask for Dewford's trendy phrase in English, so the
+people who say it (in Dewford and its hall) say it in English. Before the
+catalogs are staged, `tools/easy_chat_english.py` writes the English EASY
+CHAT words and moves into `src/data/easy_chat/easy_chat_words_english.h`;
+patch 0100 makes `BufferTrendyPhraseString` read them. Everything else, the
+EASY CHAT screen included, is in Portuguese.
