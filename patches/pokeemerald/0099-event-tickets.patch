@@ -1,0 +1,223 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the event islands' tickets earned in the game, handed over by the MYSTERY GIFT man (OPTIONS > POKEDEX > EVENT TICKETS)
+Applies after 0098-bw-caught-and-hatched.patch; apply with tools/bootstrap.py.
+
+diff --git a/data/scripts/cable_club.inc b/data/scripts/cable_club.inc
+index def79c0..b2e71c0 100644
+--- a/data/scripts/cable_club.inc
++++ b/data/scripts/cable_club.inc
+@@ -3,6 +3,8 @@ CableClub_OnTransition:
+ 	end
+ 
+ CableClub_EventScript_HideOrShowMysteryGiftMan::
++	specialvar VAR_RESULT, CtrEventTicket_Due
++	goto_if_ne VAR_RESULT, ITEM_NONE, CableClub_EventScript_ShowMysteryGiftMan
+ 	specialvar VAR_RESULT, ShouldDistributeEonTicket
+ 	goto_if_eq VAR_RESULT, TRUE, CableClub_EventScript_ShowMysteryGiftMan
+ 	specialvar VAR_RESULT, ValidateSavedWonderCard
+@@ -19,11 +21,86 @@ CableClub_EventScript_HideMysteryGiftMan::
+ 	return
+ 
+ CableClub_EventScript_MysteryGiftMan::
++	specialvar VAR_RESULT, CtrEventTicket_Due
++	goto_if_ne VAR_RESULT, ITEM_NONE, CableClub_EventScript_CtrEventTicket
+ 	specialvar VAR_RESULT, ShouldDistributeEonTicket
+ 	goto_if_eq VAR_RESULT, TRUE, CableClub_EventScript_DistributeEonTicket
+ 	goto CableClub_EventScript_TryWonderCardScript
+ 	end
+ 
++@ Emerald 3DS: the event islands' tickets the player has earned in the game
++@ (src/event_tickets.c), one after another.
++CableClub_EventScript_CtrEventTicket::
++	lock
++	faceplayer
++CableClub_EventScript_CtrEventTicketNext::
++	specialvar VAR_RESULT, CtrEventTicket_Due
++	goto_if_eq VAR_RESULT, ITEM_AURORA_TICKET, CableClub_EventScript_CtrAuroraTicket
++	goto_if_eq VAR_RESULT, ITEM_EON_TICKET, CableClub_EventScript_CtrEonTicket
++	goto_if_eq VAR_RESULT, ITEM_OLD_SEA_MAP, CableClub_EventScript_CtrOldSeaMap
++	goto_if_eq VAR_RESULT, ITEM_MYSTIC_TICKET, CableClub_EventScript_CtrMysticTicket
++	release
++	end
++
++CableClub_EventScript_CtrAuroraTicket::
++	msgbox CableClub_Text_CtrTicketFromSteven, MSGBOX_DEFAULT
++	giveitem ITEM_AURORA_TICKET
++	goto_if_eq VAR_0x8007, FALSE, CableClub_EventScript_CtrTicketEnd
++	setflag FLAG_ENABLE_SHIP_BIRTH_ISLAND
++	setflag FLAG_RECEIVED_AURORA_TICKET
++	goto CableClub_EventScript_CtrTicketGiven
++
++CableClub_EventScript_CtrEonTicket::
++	msgbox CableClub_Text_CtrTicketFromGymLeaders, MSGBOX_DEFAULT
++	giveitem ITEM_EON_TICKET
++	goto_if_eq VAR_0x8007, FALSE, CableClub_EventScript_CtrTicketEnd
++	setflag FLAG_ENABLE_SHIP_SOUTHERN_ISLAND
++	goto CableClub_EventScript_CtrTicketGiven
++
++CableClub_EventScript_CtrOldSeaMap::
++	msgbox CableClub_Text_CtrTicketFromGymLeaders, MSGBOX_DEFAULT
++	giveitem ITEM_OLD_SEA_MAP
++	goto_if_eq VAR_0x8007, FALSE, CableClub_EventScript_CtrTicketEnd
++	setflag FLAG_ENABLE_SHIP_FARAWAY_ISLAND
++	setflag FLAG_RECEIVED_OLD_SEA_MAP
++	goto CableClub_EventScript_CtrTicketGiven
++
++CableClub_EventScript_CtrMysticTicket::
++	msgbox CableClub_Text_CtrTicketFromLeague, MSGBOX_DEFAULT
++	giveitem ITEM_MYSTIC_TICKET
++	goto_if_eq VAR_0x8007, FALSE, CableClub_EventScript_CtrTicketEnd
++	setflag FLAG_ENABLE_SHIP_NAVEL_ROCK
++	setflag FLAG_RECEIVED_MYSTIC_TICKET
++	goto CableClub_EventScript_CtrTicketGiven
++
++CableClub_EventScript_CtrTicketGiven::
++	msgbox MysteryGift_Text_TryUsingItAtLilycovePort, MSGBOX_DEFAULT
++	goto CableClub_EventScript_CtrEventTicketNext
++
++CableClub_EventScript_CtrTicketEnd::
++	release
++	end
++
++CableClub_Text_CtrTicketFromSteven::
++	.string "Thank you for using the MYSTERY\n"
++	.string "GIFT System.\p"
++	.string "You must be {PLAYER}.\n"
++	.string "STEVEN left this here for you.$"
++
++CableClub_Text_CtrTicketFromGymLeaders::
++	.string "Thank you for using the MYSTERY\n"
++	.string "GIFT System.\p"
++	.string "You must be {PLAYER}.\n"
++	.string "HOENN's GYM LEADERS left this\l"
++	.string "here for you.$"
++
++CableClub_Text_CtrTicketFromLeague::
++	.string "Thank you for using the MYSTERY\n"
++	.string "GIFT System.\p"
++	.string "You must be {PLAYER}.\n"
++	.string "The POKéMON LEAGUE left this\l"
++	.string "here for you.$"
++
+ CableClub_EventScript_TryWonderCardScript::
+ 	trywondercardscript
+ CableClub_EventScript_MysteryGiftThankYou::
+diff --git a/data/specials.inc b/data/specials.inc
+index 6f6f3b4..4eee9d6 100644
+--- a/data/specials.inc
++++ b/data/specials.inc
+@@ -543,3 +543,4 @@ gSpecials:
+ 	def_special LocalSession_Wait
+ 	def_special LocalSession_CanEnter
+ 	def_special LocalSession_Leave
++	def_special CtrEventTicket_Due
+diff --git a/include/event_tickets.h b/include/event_tickets.h
+new file mode 100644
+index 0000000..efd85ac
+--- /dev/null
++++ b/include/event_tickets.h
+@@ -0,0 +1,8 @@
++#ifndef GUARD_EVENT_TICKETS_H
++#define GUARD_EVENT_TICKETS_H
++
++/* Emerald 3DS: the event islands' tickets earned in the game
++ * (src/event_tickets.c, OPTIONS > POKEDEX > EVENT TICKETS). */
++u16 CtrEventTicket_Due(void);
++
++#endif // GUARD_EVENT_TICKETS_H
+diff --git a/src/event_tickets.c b/src/event_tickets.c
+new file mode 100644
+index 0000000..c919cf2
+--- /dev/null
++++ b/src/event_tickets.c
+@@ -0,0 +1,91 @@
++/* Emerald 3DS: the event islands' tickets without the Mystery Gift
++ * (OPTIONS > POKEDEX > EVENT TICKETS).
++ *
++ * After the Hall of Fame, the MYSTERY GIFT man upstairs in a POKéMON CENTER
++ * hands over each ticket the player has earned (data/scripts/cable_club.inc):
++ *
++ *   AURORA TICKET (DEOXYS, BIRTH ISLAND)    STEVEN beaten at METEOR FALLS
++ *   EON TICKET (the LATI the player did     four GYM LEADERS beaten again
++ *     not choose, SOUTHERN ISLAND)
++ *   OLD SEA MAP (MEW, FARAWAY ISLAND)       all eight GYM LEADERS beaten again
++ *   MYSTIC TICKET (LUGIA and HO-OH,         the POKéMON LEAGUE won a second time
++ *     NAVEL ROCK)
++ *
++ * The conditions read what the save already keeps (a rematch sets its
++ * trainer's flag, the Hall of Fame counts its entries), so a save that met
++ * one before the option existed gets it too. A ticket is never given twice:
++ * once the ferry to its island is enabled, by this or by a real Mystery
++ * Gift, it is done. */
++#include "global.h"
++#include "event_data.h"
++#include "event_tickets.h"
++#include "item.h"
++#include "overworld.h"
++#include "constants/items.h"
++#include "constants/opponents.h"
++#include "3ds_extras.h"
++
++static const u16 sGymLeaderRematches[] =
++{
++    TRAINER_ROXANNE_2, TRAINER_BRAWLY_2, TRAINER_WATTSON_2, TRAINER_FLANNERY_2,
++    TRAINER_NORMAN_2, TRAINER_WINONA_2, TRAINER_TATE_AND_LIZA_2, TRAINER_JUAN_2,
++};
++
++static u32 GymLeadersBeatenAgain(void)
++{
++    u32 i, count = 0;
++
++    /* A rematch sets the flag of the trainer it was against: the leader's
++     * first rematch is TRAINER_*_2, and the later ones need it beaten. */
++    for (i = 0; i < ARRAY_COUNT(sGymLeaderRematches); i++)
++    {
++        if (FlagGet(TRAINER_FLAGS_START + sGymLeaderRematches[i]))
++            count++;
++    }
++    return count;
++}
++
++static bool32 Earned(u16 item)
++{
++    switch (item)
++    {
++    case ITEM_AURORA_TICKET:
++        return FlagGet(FLAG_DEFEATED_METEOR_FALLS_STEVEN);
++    case ITEM_EON_TICKET:
++        return GymLeadersBeatenAgain() >= 4;
++    case ITEM_OLD_SEA_MAP:
++        return GymLeadersBeatenAgain() >= ARRAY_COUNT(sGymLeaderRematches);
++    case ITEM_MYSTIC_TICKET:
++        return GetGameStat(GAME_STAT_ENTERED_HOF) >= 2;
++    }
++    return FALSE;
++}
++
++static const struct
++{
++    u16 item;
++    u16 shipFlag;
++} sTickets[] =
++{
++    {ITEM_AURORA_TICKET, FLAG_ENABLE_SHIP_BIRTH_ISLAND},
++    {ITEM_EON_TICKET,    FLAG_ENABLE_SHIP_SOUTHERN_ISLAND},
++    {ITEM_OLD_SEA_MAP,   FLAG_ENABLE_SHIP_FARAWAY_ISLAND},
++    {ITEM_MYSTIC_TICKET, FLAG_ENABLE_SHIP_NAVEL_ROCK},
++};
++
++/* The next ticket the player has earned and not had, or ITEM_NONE. */
++u16 CtrEventTicket_Due(void)
++{
++    u32 i;
++
++    if (!CtrExtras_Get("event_tickets") || !FlagGet(FLAG_SYS_GAME_CLEAR))
++        return ITEM_NONE;
++    for (i = 0; i < ARRAY_COUNT(sTickets); i++)
++    {
++        if (FlagGet(sTickets[i].shipFlag) || CheckBagHasItem(sTickets[i].item, 1))
++            continue;
++        if (Earned(sTickets[i].item))
++            return sTickets[i].item;
++    }
++    return ITEM_NONE;
++}
