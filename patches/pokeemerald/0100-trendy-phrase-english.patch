@@ -42,10 +42,28 @@ index 45c18f6..e5e4276 100644
  
  // Returns TRUE if the current trendy phrase is "boring", FALSE otherwise
 diff --git a/src/easy_chat.c b/src/easy_chat.c
-index 4dced7c..731f23a 100644
+index 4dced7c..97f3a34 100644
 --- a/src/easy_chat.c
 +++ b/src/easy_chat.c
-@@ -5231,8 +5231,27 @@ bool8 IsBardWordInvalid(u16 easyChatWord)
+@@ -1309,6 +1309,9 @@ void DoEasyChatScreen(u8 type, u16 *words, MainCallback exitCallback, u8 display
+     u8 taskId;
+ 
+     ResetTasks();
++    // Emerald 3DS: a new trendy phrase is picked from the English words in a
++    // translated build, as the Feebas calculators ask for them.
++    CtrEasyChat_SetEnglish(type == EASY_CHAT_TYPE_TRENDY_PHRASE);
+     taskId = CreateTask(Task_InitEasyChatScreen, 0);
+     gTasks[taskId].tType = type;
+     gTasks[taskId].tPersonType = displayedPersonType;
+@@ -1463,6 +1466,7 @@ static void ExitEasyChatScreen(MainCallback callback)
+     FreeEasyChatScreenStruct();
+     FreeEasyChatScreenWordData();
+     FreeAllWindowBuffers();
++    CtrEasyChat_SetEnglish(FALSE);
+     SetMainCallback2(callback);
+ }
+ 
+@@ -5231,8 +5235,27 @@ bool8 IsBardWordInvalid(u16 easyChatWord)
          return FALSE;
  }
  

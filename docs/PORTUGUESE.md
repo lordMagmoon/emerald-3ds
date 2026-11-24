@@ -173,5 +173,6 @@ The Feebas calculators ask for Dewford's trendy phrase in English, so the
 people who say it (in Dewford and its hall) say it in English. Before the
 catalogs are staged, `tools/easy_chat_english.py` writes the English EASY
 CHAT words and moves into `src/data/easy_chat/easy_chat_words_english.h`;
-patch 0100 makes `BufferTrendyPhraseString` read them. Everything else, the
-EASY CHAT screen included, is in Portuguese.
+patch 0100 makes `BufferTrendyPhraseString` read them, and the EASY CHAT
+screen shows them when it picks a new trendy phrase (its lists keep the
+Portuguese order). Everything else is in Portuguese.

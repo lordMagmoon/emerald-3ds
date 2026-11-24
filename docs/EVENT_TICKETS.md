@@ -5,7 +5,8 @@ came through Nintendo's Mystery Gift distributions, which ended long ago.
 OPTIONS > POKEDEX > **EVENT TICKETS** (on by default) lets the player earn
 them in the game. After the Hall of Fame, the MYSTERY GIFT man upstairs in a
 POKéMON CENTER appears when a ticket is due and hands it over, as he handed
-over the EON TICKET in the original:
+over the EON TICKET in the original. STEVEN hands over his ticket himself
+right after the battle, or whenever the player talks to him later:
 
 | Item | Island and Pokémon | Earned by |
 |---|---|---|
@@ -27,6 +28,8 @@ only sets the same flags the Mystery Gift scripts set.
     `GAME_STAT_ENTERED_HOF`);
   - `data/scripts/cable_club.inc`: the MYSTERY GIFT man shows when a ticket
     is due and hands over each one, with a line saying who left it;
+  - `data/maps/MeteorFalls_StevensCave/scripts.inc`: STEVEN gives the
+    AURORA TICKET when it is due;
   - `data/specials.inc`: the special, at the end of the table.
 - `3ds_port/src/3ds_extras.c`: the `event_tickets` option.
 - `tools/locales/pt_br/data/scripts/cable_club.inc.txt`: the three new lines

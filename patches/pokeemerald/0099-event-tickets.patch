@@ -1,6 +1,56 @@
 Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the event islands' tickets earned in the game, handed over by the MYSTERY GIFT man (OPTIONS > POKEDEX > EVENT TICKETS)
 Applies after 0098-bw-caught-and-hatched.patch; apply with tools/bootstrap.py.
 
+diff --git a/data/maps/MeteorFalls_StevensCave/scripts.inc b/data/maps/MeteorFalls_StevensCave/scripts.inc
+index de24d35..6b16d4d 100644
+--- a/data/maps/MeteorFalls_StevensCave/scripts.inc
++++ b/data/maps/MeteorFalls_StevensCave/scripts.inc
+@@ -16,6 +16,7 @@ MeteorFalls_StevensCave_EventScript_Steven::
+ 	trainerbattle_no_intro TRAINER_STEVEN, MeteorFalls_StevensCave_Text_StevenDefeat
+ 	msgbox MeteorFalls_StevensCave_Text_MyPredictionCameTrue, MSGBOX_DEFAULT
+ 	setflag FLAG_DEFEATED_METEOR_FALLS_STEVEN
++	call MeteorFalls_StevensCave_EventScript_CtrAuroraTicket
+ 	release
+ 	end
+ 
+@@ -23,9 +24,37 @@ MeteorFalls_StevensCave_EventScript_Defeated::
+ 	applymovement LOCALID_METEOR_FALLS_STEVEN, Common_Movement_FacePlayer
+ 	waitmovement 0
+ 	msgbox MeteorFalls_StevensCave_Text_MyPredictionCameTrue, MSGBOX_DEFAULT
++	call MeteorFalls_StevensCave_EventScript_CtrAuroraTicket
+ 	release
+ 	end
+ 
++@ Emerald 3DS: STEVEN hands over the AURORA TICKET once he is beaten, now
++@ or any later time the player talks to him (src/event_tickets.c).
++MeteorFalls_StevensCave_EventScript_CtrAuroraTicket::
++	specialvar VAR_RESULT, CtrEventTicket_Due
++	goto_if_ne VAR_RESULT, ITEM_AURORA_TICKET, MeteorFalls_StevensCave_EventScript_CtrTicketDone
++	msgbox MeteorFalls_StevensCave_Text_CtrTakeThisTicket, MSGBOX_DEFAULT
++	giveitem ITEM_AURORA_TICKET
++	goto_if_eq VAR_0x8007, FALSE, MeteorFalls_StevensCave_EventScript_CtrTicketDone
++	setflag FLAG_ENABLE_SHIP_BIRTH_ISLAND
++	setflag FLAG_RECEIVED_AURORA_TICKET
++	msgbox MeteorFalls_StevensCave_Text_CtrShowItAtLilycove, MSGBOX_DEFAULT
++MeteorFalls_StevensCave_EventScript_CtrTicketDone::
++	return
++
++MeteorFalls_StevensCave_Text_CtrTakeThisTicket:
++	.string "STEVEN: {PLAYER}{KUN}, I'd like you to\n"
++	.string "have this.\p"
++	.string "It's a ticket for a ship to an island\n"
++	.string "where a meteorite is said to have\l"
++	.string "fallen long ago.$"
++
++MeteorFalls_StevensCave_Text_CtrShowItAtLilycove:
++	.string "STEVEN: Show it at the port of\n"
++	.string "LILYCOVE CITY.\p"
++	.string "Who knows what you'll find there…\n"
++	.string "I'd love to hear about it.$"
++
+ MeteorFalls_StevensCave_Text_ShouldKnowHowGoodIAmExpectWorst:
+ 	.string "STEVEN: Oh, wow, {PLAYER}{KUN}.\n"
+ 	.string "I'm amazed you knew where to find me.\p"
 diff --git a/data/scripts/cable_club.inc b/data/scripts/cable_club.inc
 index def79c0..b2e71c0 100644
 --- a/data/scripts/cable_club.inc
