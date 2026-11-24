@@ -28,3 +28,17 @@ E pra onde você vai agora?\p
 … … … … … …\n
 … … … … … …\p
 Fufufu, nem eu sei te dizer.$
+
+# O STEVEN entrega o BILHETE AURORA depois de vencido (bilhetes de evento).
+[MeteorFalls_StevensCave_Text_CtrTakeThisTicket] d145b0af69
+STEVEN: {PLAYER}{KUN}, quero que você\n
+fique com isto.\p
+É uma passagem de navio para uma ilha\n
+onde dizem que um meteorito caiu\l
+há muito tempo.$
+
+[MeteorFalls_StevensCave_Text_CtrShowItAtLilycove] e289cb3133
+STEVEN: Mostre-a no porto da\n
+CIDADE DE LILYCOVE.\p
+Quem sabe o que você vai encontrar…\n
+Depois me conte, quero saber.$
