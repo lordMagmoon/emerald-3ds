@@ -32,6 +32,14 @@ const struct WildPokemonInfo *CtrEncounters_Water(const struct WildPokemonInfo *
  * AREA, pokedex_area_screen.c). */
 bool CtrEncounters_MapHasExtra(unsigned mapGroup, unsigned mapNum, uint16_t species);
 
+/* The game a Ruby/Sapphire Pokemon met on this slot comes from: its version
+ * number (CTR_RS_RUBY, CTR_RS_SAPPHIRE), CTR_RS_EITHER for one in both games,
+ * or 0 for any other. */
+#define CTR_RS_SAPPHIRE 1
+#define CTR_RS_RUBY 2
+#define CTR_RS_EITHER 0xFF
+unsigned CtrEncounters_RsOrigin(unsigned mapGroup, unsigned mapNum, bool water, unsigned slot, uint16_t species);
+
 /*
  * A visible wild Pokemon (wild_encounter.c) lives on land or in the water,
  * and meets the player only where it lives: in the water the player is
