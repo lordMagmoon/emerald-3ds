@@ -38,53 +38,64 @@ static const CtrTimedEncounterRule sRules[] = {
  * RUBY/SAPPHIRE POKEMON (OPTIONS > POKEDEX, on by default): the seven Hoenn
  * Pokemon Ruby and Sapphire have in the wild and Emerald does not (pret's
  * pokeruby, src/data/wild_encounters.json), on the maps and the slots where
- * those games have them, at that slot's level. A slot is taken only where the
- * species it held stays on that table (another of its slots). Surskit, whose
- * Ruby/Sapphire slots are the only Seedot and surfing Goldeen ones, is on the
- * fourth surfing slot (4%) of the routes it surfs on there, taken from Marill.
+ * those games have them, at their level there. A slot is taken only where the
+ * species it held stays on that map (another of its slots, or its fishing).
+ *
+ * Each is caught as met in the game it comes from (CtrEncounters_RsOrigin):
+ * same map, slot and level as there, and the game's own order of random calls
+ * for the slot, the level and the personality, so a save checker such as
+ * PKHeX finds the encounter. Lunatone is Sapphire's, Zangoose and Dusclops
+ * Ruby's; the others, in both, are one or the other at random. Dusclops comes
+ * at Ruby's levels (48, 51, 54), above Emerald's Sky Pillar; Surskit on the
+ * fifth surfing slot (1%), from Goldeen, which is still fished there. Its
+ * grass slot (1%) is the only Seedot of those routes and stays Emerald's.
  */
-#define RS(map, water, slotIndex, from, to) \
-    {MAP_GROUP(MAP_##map), MAP_NUM(MAP_##map), water, slotIndex, SPECIES_##from, SPECIES_##to}
+#define RS(map, water, slotIndex, from, to, origin) \
+    {MAP_GROUP(MAP_##map), MAP_NUM(MAP_##map), water, slotIndex, 0, 0, CTR_RS_##origin, SPECIES_##from, SPECIES_##to}
+#define RS_LEVEL(map, water, slotIndex, from, to, origin, level) \
+    {MAP_GROUP(MAP_##map), MAP_NUM(MAP_##map), water, slotIndex, level, level, CTR_RS_##origin, SPECIES_##from, SPECIES_##to}
 
 typedef struct
 {
     uint8_t mapGroup, mapNum, water, slot;
+    uint8_t minLevel, maxLevel; /* 0: the slot's own */
+    uint8_t origin;             /* CTR_RS_RUBY, CTR_RS_SAPPHIRE or CTR_RS_EITHER */
     uint16_t expectedSpecies, species;
 } CtrRsEncounterRule;
 
 static const CtrRsEncounterRule sRsRules[] = {
-    RS(METEOR_FALLS_1F_1R, 0, 5, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_1R, 0, 7, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_1R, 1, 2, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_1R, 1, 4, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_2R, 0, 3, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_2R, 0, 5, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_2R, 1, 2, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_1F_2R, 1, 4, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_1R, 0, 3, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_1R, 0, 5, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_1R, 1, 2, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_1R, 1, 4, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_2R, 0, 3, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_2R, 0, 7, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_2R, 1, 2, SOLROCK, LUNATONE),
-    RS(METEOR_FALLS_B1F_2R, 1, 4, SOLROCK, LUNATONE),
-    RS(MT_PYRE_EXTERIOR, 0, 1, SHUPPET, MEDITITE),
-    RS(ROUTE114, 0, 5, LOMBRE, ZANGOOSE),
-    RS(ROUTE114, 0, 9, SEVIPER, ZANGOOSE),
-    RS(ROUTE117, 0, 1, ODDISH, ROSELIA),
-    RS(SKY_PILLAR_1F, 0, 5, BANETTE, DUSCLOPS),
-    RS(SKY_PILLAR_3F, 0, 5, BANETTE, DUSCLOPS),
-    RS(SKY_PILLAR_5F, 0, 5, BANETTE, DUSCLOPS),
-    RS(VICTORY_ROAD_B1F, 0, 3, LAIRON, MEDICHAM),
-    RS(VICTORY_ROAD_B1F, 0, 9, MAWILE, MEDITITE),
-    RS(VICTORY_ROAD_B2F, 0, 3, LAIRON, MEDICHAM),
-    RS(VICTORY_ROAD_B2F, 0, 11, MAWILE, MEDICHAM),
-    RS(ROUTE102, 1, 3, MARILL, SURSKIT),
-    RS(ROUTE111, 1, 3, MARILL, SURSKIT),
-    RS(ROUTE114, 1, 3, MARILL, SURSKIT),
-    RS(ROUTE117, 1, 3, MARILL, SURSKIT),
-    RS(ROUTE120, 1, 3, MARILL, SURSKIT),
+    RS(METEOR_FALLS_1F_1R, 0, 5, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_1R, 0, 7, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_1R, 1, 2, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_1R, 1, 4, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_2R, 0, 3, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_2R, 0, 5, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_2R, 1, 2, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_1F_2R, 1, 4, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_1R, 0, 3, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_1R, 0, 5, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_1R, 1, 2, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_1R, 1, 4, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_2R, 0, 3, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_2R, 0, 7, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_2R, 1, 2, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(METEOR_FALLS_B1F_2R, 1, 4, SOLROCK, LUNATONE, SAPPHIRE),
+    RS(MT_PYRE_EXTERIOR, 0, 1, SHUPPET, MEDITITE, EITHER),
+    RS(ROUTE114, 0, 5, LOMBRE, ZANGOOSE, RUBY),
+    RS(ROUTE114, 0, 9, SEVIPER, ZANGOOSE, RUBY),
+    RS(ROUTE117, 0, 1, ODDISH, ROSELIA, EITHER),
+    RS_LEVEL(SKY_PILLAR_1F, 0, 5, BANETTE, DUSCLOPS, RUBY, 48),
+    RS_LEVEL(SKY_PILLAR_3F, 0, 5, BANETTE, DUSCLOPS, RUBY, 51),
+    RS_LEVEL(SKY_PILLAR_5F, 0, 5, BANETTE, DUSCLOPS, RUBY, 54),
+    RS(VICTORY_ROAD_B1F, 0, 3, LAIRON, MEDICHAM, EITHER),
+    RS(VICTORY_ROAD_B1F, 0, 9, MAWILE, MEDITITE, EITHER),
+    RS(VICTORY_ROAD_B2F, 0, 3, LAIRON, MEDICHAM, EITHER),
+    RS(VICTORY_ROAD_B2F, 0, 11, MAWILE, MEDICHAM, EITHER),
+    RS(ROUTE102, 1, 4, GOLDEEN, SURSKIT, EITHER),
+    RS(ROUTE111, 1, 4, GOLDEEN, SURSKIT, EITHER),
+    RS(ROUTE114, 1, 4, GOLDEEN, SURSKIT, EITHER),
+    RS(ROUTE117, 1, 4, GOLDEEN, SURSKIT, EITHER),
+    RS(ROUTE120, 1, 4, GOLDEEN, SURSKIT, EITHER),
 };
 
 static bool RsEnabled(void)
@@ -109,6 +120,11 @@ static bool ApplyRs(struct WildPokemon *slots, unsigned count, unsigned mapGroup
          || slots[rule->slot].species != rule->expectedSpecies)
             continue;
         slots[rule->slot].species = rule->species;
+        if (rule->minLevel)
+        {
+            slots[rule->slot].minLevel = rule->minLevel;
+            slots[rule->slot].maxLevel = rule->maxLevel;
+        }
         changed = true;
     }
     return changed;
@@ -122,6 +138,21 @@ bool CtrEncounters_MapHasExtra(unsigned mapGroup, unsigned mapNum, uint16_t spec
         if (sRsRules[i].mapGroup == mapGroup && sRsRules[i].mapNum == mapNum && sRsRules[i].species == species)
             return true;
     return false;
+}
+
+unsigned CtrEncounters_RsOrigin(unsigned mapGroup, unsigned mapNum, bool water, unsigned slot, uint16_t species)
+{
+    if (!RsEnabled())
+        return 0;
+    for (unsigned i = 0; i < ARRAY_COUNT(sRsRules); ++i)
+    {
+        const CtrRsEncounterRule *rule = &sRsRules[i];
+
+        if (rule->mapGroup == mapGroup && rule->mapNum == mapNum && rule->water == water
+         && rule->slot == slot && rule->species == species)
+            return rule->origin;
+    }
+    return 0;
 }
 
 const struct WildPokemonInfo *CtrEncounters_Water(const struct WildPokemonInfo *original,

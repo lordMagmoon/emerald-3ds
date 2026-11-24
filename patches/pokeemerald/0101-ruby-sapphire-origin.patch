@@ -1,0 +1,103 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Ruby and Sapphire's wild Pokemon met in the game they come from; visible wild Pokemon made as random encounters are
+Applies after 0100-trendy-phrase-english.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+index 0fba5ab..65935e8 100644
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -467,6 +467,24 @@ static void CreateWildMon(u16 species, u8 level)
+ #define TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildPokemon, type, ability, ptr, count) TryGetAbilityInfluencedWildMonIndex(wildPokemon, type, ability, ptr)
+ #endif
+ 
++/* Emerald 3DS: a Ruby/Sapphire Pokemon (OPTIONS > POKEDEX > RUBY/SAPPHIRE) is
++ * met in the game it comes from. Its map, slot and level are that game's, and
++ * the slot, the level and the personality come from the random calls in the
++ * same order, so a save checker such as PKHeX finds the encounter there. */
++static void SetWildMonOrigin(struct Pokemon *mon, bool32 water, u32 slot, u16 tableSpecies)
++{
++    u32 origin = CtrEncounters_RsOrigin(gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum,
++                                        water, slot, tableSpecies);
++    u8 game;
++
++    if (origin == 0 || WILD_SPECIES(tableSpecies) != tableSpecies)
++        return;
++    if (origin == CTR_RS_EITHER)
++        origin = (GetMonData(mon, MON_DATA_PERSONALITY) >> 16) & 1 ? CTR_RS_RUBY : CTR_RS_SAPPHIRE;
++    game = origin;
++    SetMonData(mon, MON_DATA_MET_GAME, &game);
++}
++
+ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 area, u8 flags)
+ {
+     u8 wildMonIndex = 0;
+@@ -500,6 +518,7 @@ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 ar
+         return FALSE;
+ 
+     CreateWildMon(WILD_SPECIES(wildMonInfo->wildPokemon[wildMonIndex].species), level);
++    SetWildMonOrigin(&gEnemyParty[0], area == WILD_AREA_WATER, wildMonIndex, wildMonInfo->wildPokemon[wildMonIndex].species);
+     return TRUE;
+ }
+ 
+@@ -719,6 +738,9 @@ struct VisibleWild
+     u16 species, idle, sparkle;
+     s16 x, y;                    /* map coordinates (MAP_OFFSET included) */
+     u32 personality;
++    u32 ivs;                     /* made when it appears, with the personality (VisibleTrySpawn) */
++    u8 slot;                     /* the slot it came from, and its species there */
++    u16 tableSpecies;
+ };
+ 
+ static struct VisibleWild sVisible[VW_MAX];
+@@ -889,11 +911,18 @@ static bool8 VisiblePlayerInWater(void)
+                                        TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_UNDERWATER) != 0);
+ }
+ 
+-u32 ShinyOdds_WildPersonality(void); // pokemon.c
+-
+-static u32 VisibleRollPersonality(void)
++/* Made as a random encounter makes it (CreateWildMon), right after its slot
++ * and its level: the same random calls in the same order, so it is met as one
++ * would be. The enemy party is put back; the battle makes it again. */
++static void VisibleRollMon(struct VisibleWild *v)
+ {
+-    return ShinyOdds_WildPersonality();
++    static struct Pokemon sBackup[PARTY_SIZE];
++
++    memcpy(sBackup, gEnemyParty, sizeof(sBackup));
++    CreateWildMon(v->species, v->level);
++    v->personality = GetMonData(&gEnemyParty[0], MON_DATA_PERSONALITY);
++    v->ivs = GetMonData(&gEnemyParty[0], MON_DATA_IVS);
++    memcpy(gEnemyParty, sBackup, sizeof(sBackup));
+ }
+ 
+ /*
+@@ -1123,7 +1152,8 @@ static void VisibleTrySpawn(u16 headerId)
+             continue;
+         if (water && AreLegendariesInSootopolisPreventingEncounters())
+             continue;
+-        wild = &info->wildPokemon[water ? ChooseWildMonIndex_WaterRock() : ChooseWildMonIndex_Land()];
++        v->slot = water ? ChooseWildMonIndex_WaterRock() : ChooseWildMonIndex_Land();
++        wild = &info->wildPokemon[v->slot];
+         v->level = ChooseWildMonLevel(wild);
+         if (!IsWildLevelAllowedByRepel(v->level))
+         {
+@@ -1132,7 +1162,8 @@ static void VisibleTrySpawn(u16 headerId)
+         }
+         // The species it is shown as is the one met when touched (VisibleStartBattle).
+         v->species = WILD_SPECIES(wild->species);
+-        v->personality = VisibleRollPersonality();
++        v->tableSpecies = wild->species;
++        VisibleRollMon(v);
+         v->shiny = GET_SHINY_VALUE(VisibleOtId(), v->personality) < SHINY_ODDS;
+         v->faceX = 0;
+         v->faceY = 1;
+@@ -1209,6 +1240,9 @@ static void VisibleStartBattle(struct VisibleWild *v)
+ {
+     ZeroEnemyPartyMons();
+     CreateMon(&gEnemyParty[0], v->species, v->level, USE_RANDOM_IVS, TRUE, v->personality, OT_ID_PLAYER_ID, 0);
++    SetMonData(&gEnemyParty[0], MON_DATA_IVS, &v->ivs);
++    CalculateMonStats(&gEnemyParty[0]);
++    SetWildMonOrigin(&gEnemyParty[0], v->water, v->slot, v->tableSpecies);
+     CtrLog_Write(CTR_LOG_GAME, "visible wild: battle with species %u lv %u", v->species, v->level);
+     VisibleRemove(v);
+     BattleSetup_StartWildBattle();

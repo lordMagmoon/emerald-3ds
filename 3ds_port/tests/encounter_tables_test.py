@@ -25,19 +25,22 @@ def main():
         seen.add((route, slot))
         assert routes['MAP_' + route]['land_mons']['mons'][int(slot)]['species'] == 'SPECIES_' + expected
     # RUBY/SAPPHIRE POKEMON: each slot holds the species its rule expects, and
-    # the species it takes stays on that table.
+    # the species it takes stays on that map (another slot, or its fishing).
     maps = {entry['map']: entry for group in data['wild_encounter_groups']
             for entry in group['encounters'] if 'map' in entry}
-    rs_rules = re.findall(r'RS\((\w+), ([01]), (\d+), (\w+), (\w+)\)', backend.read_text())
+    rs_rules = re.findall(r'RS(?:_LEVEL)?\((\w+), ([01]), (\d+), (\w+), (\w+), (RUBY|SAPPHIRE|EITHER)(?:, \d+)?\)',
+                          backend.read_text())
     assert len(rs_rules) >= 30
     taken = {}
-    for name, water, slot, expected, species in rs_rules:
+    for name, water, slot, expected, species, origin in rs_rules:
         table = maps['MAP_' + name]['water_mons' if water == '1' else 'land_mons']['mons']
         assert table[int(slot)]['species'] == 'SPECIES_' + expected, (name, slot)
         taken.setdefault((name, water), set()).add(int(slot))
     for (name, water), slots in taken.items():
         table = [m['species'] for m in maps['MAP_' + name]['water_mons' if water == '1' else 'land_mons']['mons']]
         kept = {table[i] for i in range(len(table)) if i not in slots}
+        if water == '1' and 'fishing_mons' in maps['MAP_' + name]:
+            kept |= {m['species'] for m in maps['MAP_' + name]['fishing_mons']['mons']}
         assert {table[i] for i in slots} <= kept, (name, water)
     source = r'''
 #include <assert.h>
@@ -101,12 +104,21 @@ int main(void) {
         assert((rule->water ? CtrEncounters_Water(&info, rule->mapGroup, rule->mapNum)
                             : CtrEncounters_Land(&info, rule->mapGroup, rule->mapNum)) == &info);
         assert(!CtrEncounters_MapHasExtra(rule->mapGroup, rule->mapNum, rule->species));
+        assert(CtrEncounters_RsOrigin(rule->mapGroup, rule->mapNum, rule->water, rule->slot, rule->species) == 0);
         rs = 1;
+        assert(rule->origin == CTR_RS_RUBY || rule->origin == CTR_RS_SAPPHIRE || rule->origin == CTR_RS_EITHER);
+        assert(CtrEncounters_RsOrigin(rule->mapGroup, rule->mapNum, rule->water, rule->slot, rule->species) == rule->origin);
+        assert(CtrEncounters_RsOrigin(rule->mapGroup, rule->mapNum, rule->water, rule->slot, rule->expectedSpecies) == 0);
         const struct WildPokemonInfo *result = rule->water ? CtrEncounters_Water(&info, rule->mapGroup, rule->mapNum)
                                                            : CtrEncounters_Land(&info, rule->mapGroup, rule->mapNum);
         assert(result != &info);
         for (unsigned index = 0; index < count; ++index) {
-            assert(result->wildPokemon[index].minLevel == table[index].minLevel);
+            if (index == rule->slot && rule->minLevel) {
+                assert(result->wildPokemon[index].minLevel == rule->minLevel);
+                assert(result->wildPokemon[index].maxLevel == rule->maxLevel);
+            } else {
+                assert(result->wildPokemon[index].minLevel == table[index].minLevel);
+            }
             if (index == rule->slot)
                 assert(result->wildPokemon[index].species == rule->species);
         }
@@ -118,7 +130,7 @@ int main(void) {
     assert(CtrEncounters_Land(NULL, 0, 0) == NULL);
     original.wildPokemon = NULL;
     assert(CtrEncounters_Land(&original, 0, 0) == &original);
-    puts("PASS production encounter tables: every rule/phase, pinned species, original fallback, unchanged levels/rates/data, Ruby/Sapphire slots");
+    puts("PASS production encounter tables: every rule/phase, pinned species, original fallback, unchanged levels/rates/data, Ruby/Sapphire slots, levels and origins");
 }
 '''
     with tempfile.TemporaryDirectory(prefix='encounters-') as temporary:
